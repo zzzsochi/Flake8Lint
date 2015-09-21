@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import re
 import sys
 
 import setuptools
@@ -15,7 +16,7 @@ else:
         'flake8'
     )
 
-EXTRA_IGNORE = ['.tox']
+EXTRA_IGNORE = []
 
 
 def main():
@@ -32,7 +33,8 @@ def main():
     report = flake8_style.check_files()
 
     exit_code = print_report(report, flake8_style)
-    raise SystemExit(exit_code > 0)
+    if exit_code > 0:
+        raise SystemExit(exit_code > 0)
 
 
 def print_report(report, flake8_style):
@@ -104,6 +106,10 @@ class Flake8Command(setuptools.Command):
                 continue
             if is_flag(value):
                 value = flag_on(value)
+            # Check if there's any values that need to be fixed.
+            if option_name == "include" and isinstance(value, str):
+                value = re.findall('[^,;\s]+', value)
+
             self.options_dict[option_name] = value
 
     def distribution_files(self):
@@ -133,4 +139,5 @@ class Flake8Command(setuptools.Command):
         # Run the checkers
         report = flake8_style.check_files()
         exit_code = print_report(report, flake8_style)
-        raise SystemExit(exit_code > 0)
+        if exit_code > 0:
+            raise SystemExit(exit_code > 0)
